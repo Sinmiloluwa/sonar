@@ -18,7 +18,7 @@ export const anonymousAuth = async (req, res) => {
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
-    res.status(200).json({ message: "Welcome on board", user: user, token: token });
+    res.status(200).json({ message: "Successful", user: user, token: token });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

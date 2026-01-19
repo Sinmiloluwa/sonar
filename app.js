@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js"
+import voiceRoutes from "./routes/voice.routes.js"
 import cors from "cors";
 
 dotenv.config();
@@ -18,7 +19,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/auth", authRoutes);
-// app.use("/voice", voiceRoutes);
+app.use("/voice", voiceRoutes);
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
