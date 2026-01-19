@@ -4,6 +4,7 @@ import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js"
 import voiceRoutes from "./routes/voice.routes.js"
 import cors from "cors";
+import { v2 as cloudinary } from 'cloudinary';
 
 dotenv.config();
 
@@ -13,6 +14,13 @@ connectDB();
 
 app.use(express.json());
 app.use(cors());
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
