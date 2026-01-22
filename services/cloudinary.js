@@ -10,6 +10,7 @@ export const uploadToCloudinary = async (file) => {
     });
 
     console.log('Upload result:', result);
+    
     return result;
   } catch (error) {
     console.error('Cloudinary upload error:', error);

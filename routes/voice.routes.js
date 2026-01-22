@@ -1,6 +1,6 @@
 import express from "express";
 import { upload } from "../middleware/upload.js";
-import { uploadVoice } from "../controllers/voice.js";
+import { feed, uploadVoice, userUploads } from "../controllers/voice.js";
 import auth from "../middleware/auth.js";
 
 const router = express.Router();
@@ -11,5 +11,8 @@ router.post(
   upload.single("audio"),
   uploadVoice
 );
+
+router.get('/my-uploads', auth, userUploads)
+router.get('/feed', auth, feed)
 
 export default router;
