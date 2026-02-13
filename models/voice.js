@@ -1,9 +1,13 @@
 import mongoose from "mongoose";
+import { CATEGORIES } from "../constants/categories.js";
 
 const VoicePostSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   audioUrl: String,
   duration: Number,
+  tags: [{ type: String }],
+  category: { type: String, enum: CATEGORIES, required: true },
+  description: { type: String, maxlength: 500 },
   reactions: {
     fire: { type: Number, default: 0 },
     heart: { type: Number, default: 0 },
@@ -13,5 +17,11 @@ const VoicePostSchema = new mongoose.Schema({
   reports: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });
+
+VoicePostSchema.index({ userId: 1, createdAt: -1 });
+VoicePostSchema.index({ tags: 1 });
+VoicePostSchema.index({ category: 1 });
+VoicePostSchema.index({ createdAt: -1 });
+VoicePostSchema.index({ tags: "text" });
 
 export default mongoose.model("VoicePost", VoicePostSchema);

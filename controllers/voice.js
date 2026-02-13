@@ -1,5 +1,6 @@
 import Voice from "../models/voice.js";
 import { uploadToCloudinary } from "../services/cloudinary.js";
+import { sendErrorEmail } from "../sendUploadErrorMail.js";
 
 export const uploadVoice = async (req, res) => {
     try {
@@ -8,11 +9,20 @@ export const uploadVoice = async (req, res) => {
 
         res.status(202).json({ message: "Upload started in background" });
 
+        const { duration, tags, category, description } = req.body;
+
+        const normalizedTags = tags
+            ? [...new Set(tags.map(tag => tag.trim().toLowerCase()))]
+            : [];
+
         uploadToCloudinary(req.file.path).then(async (result) => {
             await Voice.create({
                 userId: req.user.id,
                 audioUrl: result.secure_url,
-                duration: req.body.duration,
+                duration,
+                tags: normalizedTags,
+                category,
+                description,
                 status: "completed"
             });
             console.log("Background upload finished.");
@@ -45,10 +55,21 @@ export const userUploads = async (req, res) => {
 
 export const feed = async (req, res) => {
     try {
-        const voices = await Voice.find()
+        const { category, userId } = req.query;
+        const query = {};
+
+        if (category) {
+            query.category = category;
+        }
+
+        if (userId) {
+            query.userId = userId;
+        }
+
+        const voices = await Voice.find(query)
             .sort({ createdAt: -1 })
             .limit(50)
-            .populate("userId", "username");
+            .populate("userId", "username displayName profilePicture");
 
         res.status(200).json(voices);
     } catch {
