@@ -4,6 +4,7 @@ import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js"
 import voiceRoutes from "./routes/voice.routes.js"
 import searchRoutes from "./routes/search.routes.js"
+import userRoutes from "./routes/user.routes.js"
 import cors from "cors";
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -30,6 +31,7 @@ app.get("/health", (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/voice", voiceRoutes);
 app.use("/search", searchRoutes);
+app.use("/user", userRoutes);
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {

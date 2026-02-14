@@ -1,4 +1,5 @@
 import Voice from "../models/voice.js";
+import Follow from "../models/follow.js";
 import { uploadToCloudinary } from "../services/cloudinary.js";
 import { sendErrorEmail } from "../sendUploadErrorMail.js";
 
@@ -55,24 +56,109 @@ export const userUploads = async (req, res) => {
 
 export const feed = async (req, res) => {
     try {
-        const { category, userId } = req.query;
-        const query = {};
+        const { category, userId, filter = "for-you" } = req.query;
+        const baseQuery = {};
 
         if (category) {
-            query.category = category;
+            baseQuery.category = category;
         }
 
         if (userId) {
-            query.userId = userId;
+            baseQuery.userId = userId;
         }
 
-        const voices = await Voice.find(query)
-            .sort({ createdAt: -1 })
-            .limit(50)
-            .populate("userId", "username displayName profilePicture");
+        const populateFields = "username displayName profilePicture";
+
+        if (filter === "trending") {
+            const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+            const matchStage = { ...baseQuery, createdAt: { $gte: cutoff } };
+
+            const voices = await Voice.aggregate([
+                { $match: matchStage },
+                {
+                    $addFields: {
+                        engagementScore: {
+                            $add: [
+                                "$reactions.fire",
+                                "$reactions.heart",
+                                "$reactions.clap",
+                                "$plays"
+                            ]
+                        }
+                    }
+                },
+                { $sort: { engagementScore: -1 } },
+                { $limit: 50 }
+            ]);
+
+            await Voice.populate(voices, {
+                path: "userId",
+                select: populateFields
+            });
+
+            return res.status(200).json(voices);
+        }
+
+        if (filter === "following") {
+            const following = await Follow.find({ follower: req.user.id }).select("following");
+            const followingIds = following.map(f => f.following);
+
+            const voices = await Voice.find({ ...baseQuery, userId: { $in: followingIds } })
+                .sort({ createdAt: -1 })
+                .limit(50)
+                .populate("userId", populateFields);
+
+            return res.status(200).json(voices);
+        }
+
+        // filter === "for-you" (default)
+        const following = await Follow.find({ follower: req.user.id }).select("following");
+        const followingIds = following.map(f => f.following);
+
+        const followingPosts = followingIds.length > 0
+            ? await Voice.find({ ...baseQuery, userId: { $in: followingIds } })
+                .sort({ createdAt: -1 })
+                .limit(30)
+                .populate("userId", populateFields)
+            : [];
+
+        const followingPostIds = followingPosts.map(p => p._id);
+        const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+        const trendingPosts = await Voice.aggregate([
+            {
+                $match: {
+                    ...baseQuery,
+                    _id: { $nin: followingPostIds },
+                    createdAt: { $gte: cutoff }
+                }
+            },
+            {
+                $addFields: {
+                    engagementScore: {
+                        $add: [
+                            "$reactions.fire",
+                            "$reactions.heart",
+                            "$reactions.clap",
+                            "$plays"
+                        ]
+                    }
+                }
+            },
+            { $sort: { engagementScore: -1 } },
+            { $limit: 20 }
+        ]);
+
+        await Voice.populate(trendingPosts, {
+            path: "userId",
+            select: populateFields
+        });
+
+        const voices = [...followingPosts, ...trendingPosts];
 
         res.status(200).json(voices);
     } catch {
-        res.status(500).json({ message: "Server error " })
+        res.status(500).json({ message: "Server error" })
     }
 }
