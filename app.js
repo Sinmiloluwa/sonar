@@ -8,7 +8,9 @@ import userRoutes from "./routes/user.routes.js"
 import cors from "cors";
 import { v2 as cloudinary } from 'cloudinary';
 
-dotenv.config();
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
 const app = express();
 
