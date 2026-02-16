@@ -12,6 +12,10 @@ if (process.env.NODE_ENV !== 'production') {
   dotenv.config();
 }
 
+console.log("=== ALL ENVIRONMENT VARIABLES ===");
+console.log(JSON.stringify(process.env, null, 2));
+console.log("=================================");
+
 console.log("NODE_ENV:", process.env.NODE_ENV);
 console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
 
