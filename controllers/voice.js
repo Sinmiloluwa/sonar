@@ -56,7 +56,11 @@ export const userUploads = async (req, res) => {
 
 export const feed = async (req, res) => {
     try {
-        const { category, userId, filter = "for-you" } = req.query;
+        const { category, userId } = req.query;
+        const filter = req.query.filter
+            || ("trending" in req.query && "trending")
+            || ("following" in req.query && "following")
+            || "for-you";
         const baseQuery = {};
 
         if (category) {
@@ -158,7 +162,7 @@ export const feed = async (req, res) => {
         const voices = [...followingPosts, ...trendingPosts];
 
         res.status(200).json(voices);
-    } catch {
+    } catch (error) {
         res.status(500).json({ message: "Server error" })
     }
 }
