@@ -8,14 +8,19 @@ import userRoutes from "./routes/user.routes.js"
 import cors from "cors";
 import { v2 as cloudinary } from 'cloudinary';
 
-dotenv.config();
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
 console.log("NODE_ENV:", process.env.NODE_ENV);
 console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
 
+const mongoUri = process.env.MONGO_URI?.replace(/^["']|["']$/g, '');
+console.log("Cleaned MONGO_URI first 20 chars:", mongoUri?.substring(0, 20));
+
 const app = express();
 
-connectDB();
+connectDB(mongoUri);
 
 app.use(express.json());
 app.use(cors());
