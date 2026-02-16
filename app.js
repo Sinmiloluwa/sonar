@@ -7,6 +7,9 @@ import searchRoutes from "./routes/search.routes.js"
 import userRoutes from "./routes/user.routes.js"
 import cors from "cors";
 import { v2 as cloudinary } from 'cloudinary';
+import { Router } from 'express';
+
+const apiRouter = Router();
 
 if (process.env.NODE_ENV !== 'production') {
   dotenv.config();
@@ -40,10 +43,20 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-app.use("/auth", authRoutes);
-app.use("/voice", voiceRoutes);
-app.use("/search", searchRoutes);
-app.use("/user", userRoutes);
+apiRouter.use("/auth", authRoutes);
+apiRouter.use("/voice", voiceRoutes);
+apiRouter.use("/search", searchRoutes);
+apiRouter.use("/user", userRoutes);
+
+app.use("/api",apiRouter);
+
+app.use((err, req, res, next) => {
+  console.error("Error:", err);
+  res.status(500).json({ 
+    error: "Internal server error", 
+    message: err.message 
+  });
+});
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
