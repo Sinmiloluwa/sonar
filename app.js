@@ -8,9 +8,10 @@ import userRoutes from "./routes/user.routes.js"
 import cors from "cors";
 import { v2 as cloudinary } from 'cloudinary';
 
-if (process.env.NODE_ENV !== 'production') {
-  dotenv.config();
-}
+dotenv.config();
+
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
 
 const app = express();
 
