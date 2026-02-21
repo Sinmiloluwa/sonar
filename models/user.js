@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, unique: true, sparse: true },
   displayName: { type: String },
   profilePicture: { type: String },
+  fcmTokens: [{ type: String }],
   createdAt: { type: Date, default: Date.now }
 });
 

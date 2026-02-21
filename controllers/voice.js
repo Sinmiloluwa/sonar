@@ -2,6 +2,7 @@ import Voice from "../models/voice.js";
 import Follow from "../models/follow.js";
 import { uploadToCloudinary } from "../services/cloudinary.js";
 import { sendErrorEmail } from "../sendUploadErrorMail.js";
+import { notifyUploadComplete, notifyFollowersNewPost } from "../services/notificationService.js";
 
 export const uploadVoice = async (req, res) => {
     try {
@@ -17,7 +18,7 @@ export const uploadVoice = async (req, res) => {
             : [];
 
         uploadToCloudinary(req.file.path).then(async (result) => {
-            await Voice.create({
+            const voicePost = await Voice.create({
                 userId: req.user.id,
                 audioUrl: result.secure_url,
                 duration,
@@ -27,6 +28,8 @@ export const uploadVoice = async (req, res) => {
                 status: "completed"
             });
             console.log("Background upload finished.");
+            notifyUploadComplete(req.user.id);
+            notifyFollowersNewPost(req.user.id, voicePost._id);
         }).catch(async (err) => {
             console.error("Background upload failed:", err)
             sendErrorEmail(req.user.email, "Audio Upload Failed", {

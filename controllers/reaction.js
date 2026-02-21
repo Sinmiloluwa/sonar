@@ -1,5 +1,6 @@
 import Reaction from "../models/reaction.js";
 import Voice from "../models/voice.js";
+import { notifyReaction } from "../services/notificationService.js";
 
 export const toggleReaction = async (req, res) => {
   try {
@@ -17,6 +18,9 @@ export const toggleReaction = async (req, res) => {
     if (!existing) {
       await Reaction.create({ userId, voicePostId: postId, type });
       await Voice.findByIdAndUpdate(postId, { $inc: { [`reactions.${type}`]: 1 } });
+      if (String(post.userId) !== userId) {
+        notifyReaction(post.userId, userId, postId, type);
+      }
       return res.status(201).json({ reacted: true, type });
     }
 

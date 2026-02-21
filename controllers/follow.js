@@ -1,5 +1,6 @@
 import Follow from "../models/follow.js";
 import User from "../models/user.js";
+import { notifyNewFollower } from "../services/notificationService.js";
 
 export const followUser = async (req, res) => {
     try {
@@ -27,6 +28,8 @@ export const followUser = async (req, res) => {
             follower: req.user.id,
             following: userId
         });
+
+        notifyNewFollower(userId, req.user.id);
 
         res.status(201).json({ message: "Followed successfully" });
     } catch (error) {

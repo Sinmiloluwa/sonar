@@ -5,6 +5,8 @@ import authRoutes from "./routes/auth.routes.js"
 import voiceRoutes from "./routes/voice.routes.js"
 import searchRoutes from "./routes/search.routes.js"
 import userRoutes from "./routes/user.routes.js"
+import notificationRoutes from "./routes/notification.routes.js"
+import { initFirebase } from "./services/firebase.js"
 import cors from "cors";
 import { v2 as cloudinary } from 'cloudinary';
 import { Router } from 'express';
@@ -21,6 +23,7 @@ console.log("Cleaned MONGO_URI first 20 chars:", mongoUri?.substring(0, 20));
 const app = express();
 
 connectDB(mongoUri);
+initFirebase();
 
 app.use(express.json());
 app.use(cors());
@@ -40,6 +43,7 @@ apiRouter.use("/auth", authRoutes);
 apiRouter.use("/voice", voiceRoutes);
 apiRouter.use("/search", searchRoutes);
 apiRouter.use("/user", userRoutes);
+apiRouter.use("/notifications", notificationRoutes);
 
 app.use("/api",apiRouter);
 

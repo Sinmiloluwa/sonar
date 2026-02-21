@@ -2,6 +2,7 @@ import User from "../models/user.js";
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { OAuth2Client } from 'google-auth-library';
+import { notifyLogin } from "../services/notificationService.js";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -19,6 +20,8 @@ export const anonymousAuth = async (req, res) => {
       id: user._id,
       username: user.username,
     };
+
+    notifyLogin(user._id).catch(err => console.error("notifyLogin failed:", err));
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
     res.status(200).json({ message: "Successful", user: user, token: token });

@@ -29,3 +29,7 @@ export const reactionSchema = yup.object({
     .oneOf(REACTION_TYPES, 'Invalid reaction type')
     .required('Reaction type is required'),
 });
+
+export const updateEmailSchema = yup.object({
+  email: yup.string().email('Invalid email format').required('Email is required'),
+});
