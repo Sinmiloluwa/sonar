@@ -1,12 +1,11 @@
 import mongoose from "mongoose";
-import { CATEGORIES } from "../constants/categories.js";
 
 const VoicePostSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   audioUrl: String,
   duration: Number,
   tags: [{ type: String }],
-  category: { type: String, enum: CATEGORIES, required: true },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
   description: { type: String, maxlength: 500 },
   reactions: {
     fire: { type: Number, default: 0 },

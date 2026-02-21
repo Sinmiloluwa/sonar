@@ -6,7 +6,9 @@ import voiceRoutes from "./routes/voice.routes.js"
 import searchRoutes from "./routes/search.routes.js"
 import userRoutes from "./routes/user.routes.js"
 import notificationRoutes from "./routes/notification.routes.js"
+import categoryRoutes from "./routes/category.routes.js"
 import { initFirebase } from "./services/firebase.js"
+import { seedCategories } from "./seeders/categories.js"
 import cors from "cors";
 import { v2 as cloudinary } from 'cloudinary';
 import { Router } from 'express';
@@ -22,7 +24,7 @@ console.log("Cleaned MONGO_URI first 20 chars:", mongoUri?.substring(0, 20));
 
 const app = express();
 
-connectDB(mongoUri);
+connectDB(mongoUri).then(() => seedCategories());
 initFirebase();
 
 app.use(express.json());
@@ -44,6 +46,7 @@ apiRouter.use("/voice", voiceRoutes);
 apiRouter.use("/search", searchRoutes);
 apiRouter.use("/user", userRoutes);
 apiRouter.use("/notifications", notificationRoutes);
+apiRouter.use("/categories", categoryRoutes);
 
 app.use("/api",apiRouter);
 

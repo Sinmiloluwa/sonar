@@ -1,5 +1,6 @@
 import User from "../models/user.js";
 import Voice from "../models/voice.js";
+import Category from "../models/category.js";
 
 export const search = async (req, res) => {
     try {
@@ -25,10 +26,19 @@ export const search = async (req, res) => {
             const query = {};
 
             if (q) {
+                const matchingCategories = await Category.find({
+                    $or: [
+                        { name: { $regex: q, $options: 'i' } },
+                        { description: { $regex: q, $options: 'i' } },
+                    ]
+                }).select('_id');
+
+                const categoryIds = matchingCategories.map(c => c._id);
+
                 query.$or = [
                     { description: { $regex: q, $options: 'i' } },
                     { tags: { $regex: q, $options: 'i' } },
-                    { category: { $regex: q, $options: 'i' } }
+                    ...(categoryIds.length ? [{ category: { $in: categoryIds } }] : []),
                 ];
             }
 
@@ -48,7 +58,8 @@ export const search = async (req, res) => {
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit)
-                .populate("userId", "username displayName profilePicture");
+                .populate("userId", "username displayName profilePicture")
+                .populate("category", "name imageUrl");
 
             const total = await Voice.countDocuments(query);
 
@@ -83,6 +94,7 @@ export const search = async (req, res) => {
 
         res.status(200).json(results);
     } catch (error) {
+        console.log("Search error:", error);
         res.status(500).json({ message: "Server error" });
     }
 };

@@ -1,5 +1,6 @@
 import Voice from "../models/voice.js";
 import Follow from "../models/follow.js";
+import Category from "../models/category.js";
 import { uploadToCloudinary } from "../services/cloudinary.js";
 import { sendErrorEmail } from "../sendUploadErrorMail.js";
 import { notifyUploadComplete, notifyFollowersNewPost } from "../services/notificationService.js";
@@ -18,12 +19,13 @@ export const uploadVoice = async (req, res) => {
             : [];
 
         uploadToCloudinary(req.file.path).then(async (result) => {
+            const categoryDoc = await Category.findOne({ slug: category });
             const voicePost = await Voice.create({
                 userId: req.user.id,
                 audioUrl: result.secure_url,
                 duration,
                 tags: normalizedTags,
-                category,
+                category: categoryDoc._id,
                 description,
                 status: "completed"
             });
@@ -49,6 +51,7 @@ export const userUploads = async (req, res) => {
     try {
         const userId = req.user.id;
         const voicePosts = await Voice.find({ userId: userId })
+            .populate("category", "-__v")
         if (!voicePosts) {
             return res.status(200).json({ message: "No voice posts" })
         }
@@ -69,7 +72,8 @@ export const feed = async (req, res) => {
         const baseQuery = {};
 
         if (category) {
-            baseQuery.category = category;
+            const categoryDoc = await Category.findOne({ slug: category }).lean();
+            if (categoryDoc) baseQuery.category = categoryDoc._id;
         }
 
         if (userId) {
@@ -101,10 +105,8 @@ export const feed = async (req, res) => {
                 { $limit: 50 }
             ]);
 
-            await Voice.populate(voices, {
-                path: "userId",
-                select: populateFields
-            });
+            await Voice.populate(voices, { path: "userId", select: populateFields });
+            await Voice.populate(voices, { path: "category", select: "-__v" });
 
             return res.status(200).json(voices);
         }
@@ -116,7 +118,8 @@ export const feed = async (req, res) => {
             const voices = await Voice.find({ ...baseQuery, userId: { $in: followingIds } })
                 .sort({ createdAt: -1 })
                 .limit(50)
-                .populate("userId", populateFields);
+                .populate("userId", populateFields)
+                .populate("category", "-__v");
 
             return res.status(200).json(voices);
         }
@@ -130,6 +133,7 @@ export const feed = async (req, res) => {
                 .sort({ createdAt: -1 })
                 .limit(30)
                 .populate("userId", populateFields)
+                .populate("category", "-__v")
             : [];
 
         const followingPostIds = followingPosts.map(p => p._id);
@@ -159,10 +163,8 @@ export const feed = async (req, res) => {
             { $limit: 20 }
         ]);
 
-        await Voice.populate(trendingPosts, {
-            path: "userId",
-            select: populateFields
-        });
+        await Voice.populate(trendingPosts, { path: "userId", select: populateFields });
+        await Voice.populate(trendingPosts, { path: "category", select: "-__v" });
 
         const voices = [...followingPosts, ...trendingPosts];
 
