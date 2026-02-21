@@ -35,6 +35,8 @@ export const uploadVoice = async (req, res) => {
             sendErrorEmail(req.user.email, "Audio Upload Failed", {
                 message: "Your recent audio upload failed to process. Please try again.",
                 error: err.message
+            }).catch((mailErr) => {
+                console.error("Notification email failed:", mailErr.message);
             });
         });
 
