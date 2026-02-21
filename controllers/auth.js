@@ -68,6 +68,8 @@ export const googleAuth = async (req, res) => {
       username: user.username,
     };
 
+    notifyLogin(user._id).catch(err => console.error("notifyLogin failed:", err));
+
     const token = jwt.sign(jwtPayload, process.env.JWT_SECRET, { expiresIn: '24h' });
     res.status(200).json({ message: "Successful", user: user, token: token });
   } catch (error) {
