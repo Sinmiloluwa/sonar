@@ -59,6 +59,7 @@ export const markAllAsRead = async (req, res) => {
 export const registerFcmToken = async (req, res) => {
   try {
     const { token } = req.body;
+    console.log("Registering FCM token:", token);
     if (!token) return res.status(400).json({ message: "Token required" });
 
     await User.findByIdAndUpdate(req.user.id, { $addToSet: { fcmTokens: token } });

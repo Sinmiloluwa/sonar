@@ -90,6 +90,8 @@ const dispatch = async ({ recipientId, actorId, type, voicePostId, reactionType 
       fcmTokens.map(token => sendPushNotification(token, payload.title, payload.body, fcmData))
     );
 
+    console.log(`Push notification results for user ${recipientId}:`, results);
+
     results.forEach((result, i) => {
       if (result.status === "fulfilled" && result.value?.staleToken) {
         cleanStaleToken(recipientId, fcmTokens[i]);
