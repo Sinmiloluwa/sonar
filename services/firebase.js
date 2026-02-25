@@ -10,7 +10,6 @@ export const initFirebase = () => {
   
   }
 
-  console.log("Initializing Firebase Admin...");
 
   let credential;
 
@@ -37,7 +36,6 @@ export const initFirebase = () => {
   try {
     admin.initializeApp({ credential });
     initialized = true;
-    console.log("Firebase Admin initialized");
   } catch (err) {
     console.error("Failed to initialize Firebase Admin:", err.message);
   }
@@ -70,7 +68,8 @@ export const sendPushNotification = async (fcmToken, title, body, data = {}) => 
     console.error("Error sending push notification:", err);
     if (
       err.code === "messaging/registration-token-not-registered" ||
-      err.code === "messaging/invalid-registration-token"
+      err.code === "messaging/invalid-registration-token" ||
+      err.code === "messaging/invalid-argument"
     ) {
       return { staleToken: true };
     }
