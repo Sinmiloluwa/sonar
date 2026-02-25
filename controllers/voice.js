@@ -18,7 +18,7 @@ export const uploadVoice = async (req, res) => {
             ? [...new Set(tags.map(tag => tag.trim().toLowerCase()))]
             : [];
 
-        uploadToCloudinary(req.file.path).then(async (result) => {
+        uploadToCloudinary(req.file.buffer).then(async (result) => {
             const categoryDoc = await Category.findOne({ slug: category });
             const voicePost = await Voice.create({
                 userId: req.user.id,
