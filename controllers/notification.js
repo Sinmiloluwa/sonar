@@ -62,7 +62,7 @@ export const registerFcmToken = async (req, res) => {
     console.log("Registering FCM token:", token);
     if (!token) return res.status(400).json({ message: "Token required" });
 
-    await User.findByIdAndUpdate(req.user.id, { $addToSet: { fcmTokens: token } });
+    await User.findByIdAndUpdate(req.user.id, { $set: { fcmTokens: [token] } });
 
     res.status(200).json({ message: "FCM token registered" });
   } catch {

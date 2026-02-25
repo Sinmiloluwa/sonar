@@ -7,7 +7,8 @@ import searchRoutes from "./routes/search.routes.js"
 import userRoutes from "./routes/user.routes.js"
 import notificationRoutes from "./routes/notification.routes.js"
 import categoryRoutes from "./routes/category.routes.js"
-import { initFirebase } from "./services/firebase.js"
+import { initFirebase } from "./services/firebase.js";
+import { startWorker } from "./services/worker.js";
 import { seedCategories } from "./seeders/categories.js"
 import cors from "cors";
 import { v2 as cloudinary } from 'cloudinary';
@@ -26,6 +27,7 @@ const app = express();
 
 connectDB(mongoUri).then(() => seedCategories());
 initFirebase();
+startWorker();
 
 app.use(express.json());
 app.use(cors());

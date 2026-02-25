@@ -3,6 +3,7 @@ import User from "../models/user.js";
 import Follow from "../models/follow.js";
 import { sendPushNotification } from "./firebase.js";
 import { sendNotificationEmail } from "./notificationEmail.js";
+import { addNotificationJob } from "./bullmq.js";
 
 const buildPayload = (type, { actorName, reactionType }) => {
   switch (type) {
@@ -49,7 +50,7 @@ const buildPayload = (type, { actorName, reactionType }) => {
 const cleanStaleToken = (userId, token) =>
   User.findByIdAndUpdate(userId, { $pull: { fcmTokens: token } }).catch(console.error);
 
-const dispatch = async ({ recipientId, actorId, type, voicePostId, reactionType }) => {
+export const dispatch = async ({ recipientId, actorId, type, voicePostId, reactionType }) => {
   const recipient = await User.findById(recipientId).lean();
   if (!recipient) return;
 
@@ -90,8 +91,6 @@ const dispatch = async ({ recipientId, actorId, type, voicePostId, reactionType 
       fcmTokens.map(token => sendPushNotification(token, payload.title, payload.body, fcmData))
     );
 
-    console.log(`Push notification results for user ${recipientId}:`, results);
-
     results.forEach((result, i) => {
       if (result.status === "fulfilled" && result.value?.staleToken) {
         cleanStaleToken(recipientId, fcmTokens[i]);
@@ -106,27 +105,27 @@ const dispatch = async ({ recipientId, actorId, type, voicePostId, reactionType 
 };
 
 export const notifyReaction = (recipientId, actorId, voicePostId, reactionType) =>
-  dispatch({ recipientId, actorId, type: "reaction", voicePostId, reactionType })
+  addNotificationJob('notifyReaction', { recipientId, actorId, type: "reaction", voicePostId, reactionType })
     .catch(err => console.error("notifyReaction failed:", err));
 
 export const notifyNewFollower = (recipientId, actorId) =>
-  dispatch({ recipientId, actorId, type: "new_follower" })
+  addNotificationJob('notifyNewFollower', { recipientId, actorId, type: "new_follower" })
     .catch(err => console.error("notifyNewFollower failed:", err));
 
 export const notifyUploadComplete = (recipientId) =>
-  dispatch({ recipientId, actorId: null, type: "upload_complete" })
+  addNotificationJob('notifyUploadComplete', { recipientId, actorId: null, type: "upload_complete" })
     .catch(err => console.error("notifyUploadComplete failed:", err));
 
 export const notifyLogin = (recipientId) =>
-  dispatch({ recipientId, actorId: null, type: "login" })
+  addNotificationJob('notifyLogin', { recipientId, actorId: null, type: "login" })
     .catch(err => console.error("notifyLogin failed:", err));
 
 export const notifyFollowersNewPost = async (actorId, voicePostId) => {
   try {
     const followers = await Follow.find({ following: actorId }).select("follower").lean();
     followers.forEach(f =>
-      dispatch({ recipientId: f.follower, actorId, type: "new_post", voicePostId })
-        .catch(err => console.error("notifyFollowersNewPost dispatch failed:", err))
+      addNotificationJob('notifyNewPost', { recipientId: f.follower, actorId, type: "new_post", voicePostId })
+        .catch(err => console.error("notifyFollowersNewPost enqueue failed:", err))
     );
   } catch (err) {
     console.error("notifyFollowersNewPost failed:", err);

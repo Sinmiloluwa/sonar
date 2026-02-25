@@ -29,7 +29,6 @@ export const uploadVoice = async (req, res) => {
                 description,
                 status: "completed"
             });
-            console.log("Background upload finished.");
             notifyUploadComplete(req.user.id);
             notifyFollowersNewPost(req.user.id, voicePost._id);
         }).catch(async (err) => {
