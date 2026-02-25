@@ -50,6 +50,7 @@ export const userUploads = async (req, res) => {
     try {
         const userId = req.user.id;
         const voicePosts = await Voice.find({ userId: userId })
+            .sort({ createdAt: -1 })
             .populate("category", "-__v")
         if (!voicePosts) {
             return res.status(200).json({ message: "No voice posts" })
@@ -165,7 +166,8 @@ export const feed = async (req, res) => {
         await Voice.populate(trendingPosts, { path: "userId", select: populateFields });
         await Voice.populate(trendingPosts, { path: "category", select: "-__v" });
 
-        const voices = [...followingPosts, ...trendingPosts];
+        const voices = [...followingPosts, ...trendingPosts]
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         res.status(200).json(voices);
     } catch (error) {
