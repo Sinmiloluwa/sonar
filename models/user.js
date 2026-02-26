@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
   username: { type: String, sparse: true },
-  authProvider: { type: String, enum: ['anonymous', 'google'], default: 'anonymous' },
+  password: { type: String, select: false },
+  authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
   googleId: { type: String, unique: true, sparse: true },
   email: { type: String, unique: true, sparse: true },
   displayName: { type: String },

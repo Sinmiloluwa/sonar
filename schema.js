@@ -6,6 +6,17 @@ export const userSchema = yup.object({
   username: yup.string().required('Username is required').min(3, 'Username must be at least 3 characters'),
 });
 
+export const registerSchema = yup.object({
+  username: yup.string().required('Username is required').min(3, 'Username must be at least 3 characters').matches(/^[^@]+$/, 'Username cannot contain @'),
+  email: yup.string().email('Invalid email format').required('Email is required'),
+  password: yup.string().required('Password is required').min(8, 'Password must be at least 8 characters'),
+});
+
+export const loginSchema = yup.object({
+  identifier: yup.string().required('Email or username is required'),
+  password: yup.string().required('Password is required'),
+});
+
 export const googleAuthSchema = yup.object({
   idToken: yup.string().required('Google ID token is required'),
 });

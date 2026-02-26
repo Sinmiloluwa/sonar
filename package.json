@@ -13,6 +13,7 @@
   "author": "Sinmiloluwa",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.2",
     "bullmq": "^5.70.1",
     "cloudinary": "^2.9.0",
