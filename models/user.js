@@ -9,6 +9,9 @@ const userSchema = new mongoose.Schema({
   displayName: { type: String },
   profilePicture: { type: String },
   fcmTokens: [{ type: String }],
+  latitude: { type: Number },
+  longitude: { type: Number },
+  bio: { type: String },
   createdAt: { type: Date, default: Date.now }
 });
 

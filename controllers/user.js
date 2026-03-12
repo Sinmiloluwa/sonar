@@ -52,3 +52,88 @@ export const updateEmail = async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 }
+
+export const updateLocation = async (req, res) => {
+    try {
+      const { latitude, longitude } = req.body;
+      if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+        return res.status(400).json({ message: 'Latitude and longitude must be numbers' });
+      }
+
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      user.latitude = latitude;
+      user.longitude = longitude;
+      await user.save();
+
+      res.json({ message: 'Location updated successfully' });
+    } catch (error) {
+      res.status(500).json({ message: 'Server error', error: error.message });
+    } 
+  }
+
+export const getNearbyUsers = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const { latitude, longitude } = user;
+    if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+      return res.status(400).json({ message: 'User location not set' });
+    }
+
+    const R = 6371; 
+    const maxDistance = 10;
+
+    const nearbyUsers = await User.find({
+      _id: { $ne: req.user.id },
+      latitude: { $exists: true },
+      longitude: { $exists: true },
+      $expr: {
+        $lte: [
+          {
+            $multiply: [
+              2 * R,
+              {
+                $asin: {
+                  $sqrt: {
+                    $add: [
+                      {
+                        $pow: [
+                          { $sin: { $divide: [{ $subtract: [{ $degreesToRadians: '$latitude' }, { $degreesToRadians: latitude }] }, 2] } },
+                          2
+                        ]
+                      },
+                      {
+                        $multiply: [
+                          { $cos: { $degreesToRadians: latitude } },
+                          { $cos: { $degreesToRadians: '$latitude' } },
+                          {
+                            $pow: [
+                              { $sin: { $divide: [{ $subtract: [{ $degreesToRadians: '$longitude' }, { $degreesToRadians: longitude }] }, 2] } },
+                              2
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          maxDistance
+        ]
+      }
+    }).select('username displayName profilePicture bio');
+
+    res.json({ nearbyUsers });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
