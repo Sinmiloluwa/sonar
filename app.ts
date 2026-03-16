@@ -51,6 +51,10 @@ apiRouter.use("/categories", categoryRoutes);
 
 app.use("/api", apiRouter);
 
+app.use((req: Request, res: Response) => {
+  res.status(404).json({ message: `Route ${req.method} ${req.path} not found` });
+});
+
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error("Error:", err);
   res.status(500).json({

@@ -1,6 +1,19 @@
 import User from '../models/user.js';
 import { Request, Response } from "express";
 
+export const getUserById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await User.findById(req.params.userId).select('-fcmTokens -__v').lean();
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+    res.status(200).json({ user });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: (error as Error).message });
+  }
+};
+
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user!.id;
