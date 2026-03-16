@@ -1,14 +1,36 @@
 import User from '../models/user.js';
+import Follow from '../models/follow.js';
+import Voice from '../models/voice.js';
 import { Request, Response } from "express";
+
+const getProfileStats = async (userId: string) => {
+  const [followers, following, playsResult] = await Promise.all([
+    Follow.countDocuments({ following: userId }),
+    Follow.countDocuments({ follower: userId }),
+    Voice.aggregate([
+      { $match: { userId: userId } },
+      { $group: { _id: null, totalPlays: { $sum: "$plays" } } },
+    ]),
+  ]);
+  return {
+    followers,
+    following,
+    totalPlays: playsResult[0]?.totalPlays ?? 0,
+  };
+};
 
 export const getUserById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const user = await User.findById(req.params.userId).select('-fcmTokens -__v').lean();
+    const userId = req.params.userId as string;
+    const [user, stats] = await Promise.all([
+      User.findById(userId).select('-fcmTokens -__v').lean(),
+      getProfileStats(userId),
+    ]);
     if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
     }
-    res.status(200).json({ user });
+    res.status(200).json({ user: { ...user, ...stats } });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: (error as Error).message });
   }
@@ -17,12 +39,15 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user!.id;
-    const user = await User.findById(userId).select('-fcmTokens -__v');
+    const [user, stats] = await Promise.all([
+      User.findById(userId).select('-fcmTokens -__v').lean(),
+      getProfileStats(userId),
+    ]);
     if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
     }
-    res.status(200).json({ user });
+    res.status(200).json({ user: { ...user, ...stats } });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: (error as Error).message });
   }
