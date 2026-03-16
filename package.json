@@ -2,13 +2,14 @@
   "name": "voice-app",
   "version": "1.0.0",
   "description": "Application for users to rant and bant",
-  "main": "app.js",
+  "main": "dist/app.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon app.js",
-    "start": "node app.js",
-    "seed:categories": "node seeders/categories.js"
+    "dev": "tsx watch app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "seed:categories": "tsx seeders/categories.ts"
   },
   "author": "Sinmiloluwa",
   "license": "ISC",
@@ -33,6 +34,16 @@
     "yup": "^1.7.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11"
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.1.0",
+    "@types/node": "^25.5.0",
+    "@types/nodemailer": "^7.0.11",
+    "@types/qrcode": "^1.5.6",
+    "nodemon": "^3.1.11",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }
