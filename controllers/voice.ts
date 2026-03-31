@@ -1,4 +1,5 @@
 import Voice from "../models/voice.js";
+import Comment from "../models/comment.js";
 import Follow from "../models/follow.js";
 import Category from "../models/category.js";
 import { uploadToCloudinary } from "../services/cloudinary.js";
@@ -70,6 +71,17 @@ export const userUploads = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
+async function withCommentCounts(posts: any[]): Promise<any[]> {
+    if (posts.length === 0) return posts;
+    const ids = posts.map(p => p._id);
+    const counts = await Comment.aggregate([
+        { $match: { voicePostId: { $in: ids } } },
+        { $group: { _id: "$voicePostId", count: { $sum: 1 } } }
+    ]);
+    const countMap = new Map(counts.map(c => [c._id.toString(), c.count]));
+    return posts.map(p => ({ ...p, comment_count: countMap.get(p._id.toString()) ?? 0 }));
+}
+
 export const feed = async (req: Request, res: Response): Promise<void> => {
     try {
         const { category, userId } = req.query as { category?: string; userId?: string };
@@ -117,7 +129,7 @@ export const feed = async (req: Request, res: Response): Promise<void> => {
             await Voice.populate(voices, { path: "userId", select: populateFields });
             await Voice.populate(voices, { path: "category", select: "-__v" });
 
-            res.status(200).json(voices);
+            res.status(200).json(await withCommentCounts(voices));
             return;
         }
 
@@ -132,7 +144,7 @@ export const feed = async (req: Request, res: Response): Promise<void> => {
                 .populate("category", "-__v")
                 .lean();
 
-            res.status(200).json(voices);
+            res.status(200).json(await withCommentCounts(voices));
             return;
         }
 
@@ -182,7 +194,7 @@ export const feed = async (req: Request, res: Response): Promise<void> => {
             const voices = [...followingPosts, ...trendingPosts]
                 .sort((a, b) => new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime());
 
-            res.status(200).json(voices);
+            res.status(200).json(await withCommentCounts(voices));
             return;
         }
 
@@ -194,10 +206,29 @@ export const feed = async (req: Request, res: Response): Promise<void> => {
             .populate("category", "-__v")
             .lean();
 
-        res.status(200).json(voices);
+        res.status(200).json(await withCommentCounts(voices));
     } catch (error) {
         res.status(500).json({ message: "Server error" });
     }
+};
+
+export const recordPlay = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const post = await Voice.findByIdAndUpdate(
+      req.params.postId,
+      { $inc: { plays: 1 } },
+      { new: true }
+    ).select('plays').lean();
+
+    if (!post) {
+      res.status(404).json({ message: "Voice post not found" });
+      return;
+    }
+
+    res.status(200).json({ plays: post.plays });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 export const voiceDetails = async (req: Request, res: Response): Promise<void> => {

@@ -1,6 +1,6 @@
 import express from "express";
 import { upload } from "../middleware/upload.js";
-import { feed, uploadVoice, userUploads, voiceDetails } from "../controllers/voice.js";
+import { feed, uploadVoice, userUploads, voiceDetails, recordPlay } from "../controllers/voice.js";
 import { toggleReaction } from "../controllers/reaction.js";
 import { addComment, getComments, deleteComment } from "../controllers/comment.js";
 import { postQR } from "../controllers/qr.js";
@@ -21,6 +21,7 @@ router.post(
 router.get('/my-uploads', auth, userUploads);
 router.get('/feed', auth, feed);
 router.get('/:postId', auth, voiceDetails);
+router.post('/:postId/play', auth, recordPlay);
 router.post('/:postId/react', auth, validate(reactionSchema as any), toggleReaction);
 router.get('/:postId/qr', auth, postQR);
 
